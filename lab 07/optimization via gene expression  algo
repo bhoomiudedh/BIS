@@ -1,0 +1,52 @@
+import random
+dist_matrix = [
+    [0, 10, 15, 20],
+    [10, 0, 35, 25],
+    [15, 35, 0, 30],
+    [20, 25, 30, 0]
+]
+def fitness(path):
+    total = 0
+    for i in range(len(path) - 1):
+        total += dist_matrix[path[i]][path[i + 1]]
+    total += dist_matrix[path[-1]][path[0]] 
+    return total
+def crossover(p1, p2):
+    cut = random.randint(1, len(p1) - 2)
+    child = p1[:cut]
+    for gene in p2:
+        if gene not in child:
+            child.append(gene)
+    return child
+def mutate(path):
+    a, b = random.sample(range(len(path)), 2)
+    path[a], path[b] = path[b], path[a]
+    return path
+def gene_expression_algo(population, generations=2):
+    for g in range(generations):
+        print(f"\nGeneration {g + 1}")
+        fitness_values = [fitness(p) for p in population]
+        for i, fval in enumerate(fitness_values):
+            print(f"Parent {i}: {population[i]}  Fitness = {fval}")
+        new_pop = []
+        for i in range(len(population)):
+            p1 = population[i]
+            p2 = population[(i + 1) % len(population)]
+            child = crossover(p1, p2)
+            if random.random() < 0.5:
+                child = mutate(child)
+            new_pop.append(child)
+
+        population = new_pop
+        offspring_fitness = [fitness(p) for p in population]
+        for i, fval in enumerate(offspring_fitness):
+            print(f"Offspring {i}: {population[i]}  Fitness = {fval}")
+
+    best_path = min(population, key=fitness)
+    best_val = fitness(best_path)
+    print(f"\nShortest path found: {best_path} with distance {best_val}")
+population = [
+    [0, 2, 3, 1],
+    [1, 2, 3, 0]
+]
+gene_expression_algo(population)
