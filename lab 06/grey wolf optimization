@@ -1,0 +1,68 @@
+import numpy as np
+
+def distance(path, dist_matrix):
+    total = 0
+    for i in range(len(path)):
+        total += dist_matrix[path[i]][path[(i+1)%len(path)]]
+    return total
+
+def vector_to_path(vec):
+    return np.argsort(vec)  
+
+def GWO_TSP(dist_matrix, num_wolves=20, max_iter=200):
+    num_cities = len(dist_matrix)
+    wolves = np.random.rand(num_wolves, num_cities)
+
+    alpha = beta = delta = None
+    alpha_cost = beta_cost = delta_cost = float("inf")
+
+    for t in range(max_iter):
+        for w in wolves:
+            path = vector_to_path(w)
+            cost = distance(path, dist_matrix)
+
+            if cost < alpha_cost:
+                delta_cost, delta = beta_cost, beta
+                beta_cost, beta = alpha_cost, alpha
+                alpha_cost, alpha = cost, w.copy()
+            elif cost < beta_cost:
+                delta_cost, delta = beta_cost, beta
+                beta_cost, beta = cost, w.copy()
+            elif cost < delta_cost:
+                delta_cost, delta = cost, w.copy()
+
+        a = 2 - 2 * (t / max_iter) 
+        for i in range(num_wolves):
+            for j in range(num_cities):
+                r1, r2 = np.random.rand(), np.random.rand()
+                A1 = 2*a*r1 - a
+                C1 = 2*r2
+                D_alpha = abs(C1 * alpha[j] - wolves[i][j])
+                X1 = alpha[j] - A1 * D_alpha
+
+                r1, r2 = np.random.rand(), np.random.rand()
+                A2 = 2*a*r1 - a
+                C2 = 2*r2
+                D_beta = abs(C2 * beta[j] - wolves[i][j])
+                X2 = beta[j] - A2 * D_beta
+
+                r1, r2 = np.random.rand(), np.random.rand()
+                A3 = 2*a*r1 - a
+                C3 = 2*r2
+                D_delta = abs(C3 * delta[j] - wolves[i][j])
+                X3 = delta[j] - A3 * D_delta
+
+                wolves[i][j] = (X1 + X2 + X3) / 3  
+
+    best_path = vector_to_path(alpha)
+    return best_path, alpha_cost
+dist_matrix = [
+    [0, 10, 12, 11],
+    [10, 0, 13, 5],
+    [12, 13, 0, 9],
+    [11, 5, 9, 0]
+]
+
+best_route, best_distance = GWO_TSP(dist_matrix, num_wolves=20, max_iter=200)
+print("Best Route Found:", best_route)
+print("Best Route Distance:", best_distance)
