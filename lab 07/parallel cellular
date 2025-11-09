@@ -1,0 +1,48 @@
+import numpy as np
+
+def simple_ao(func, bounds, size=10, iters=50):
+    dim = len(bounds)
+    cells = np.random.rand(size, size, dim)
+    for d in range(dim):
+        min_b, max_b = bounds[d]
+        cells[:, :, d] = cells[:, :, d] * (max_b - min_b) + min_b
+
+    best_pos = None
+    best_val = float('inf')
+
+    for step in range(iters):
+        for i in range(size):
+            for j in range(size):
+                val = func(cells[i, j])
+                if val < best_val:
+                    best_val = val
+                    best_pos = cells[i, j].copy()
+        new_cells = cells.copy()
+        for i in range(size):
+            for j in range(size):
+                best_neighbor = cells[i, j]
+                best_neighbor_val = func(best_neighbor)
+
+                for di, dj in [(-1,0), (1,0), (0,-1), (0,1)]:
+                    ni = (i + di) % size
+                    nj = (j + dj) % size
+                    nval = func(cells[ni, nj])
+                    if nval < best_neighbor_val:
+                        best_neighbor_val = nval
+                        best_neighbor = cells[ni, nj]
+                new_cells[i, j] = 0.5 * (cells[i, j] + best_neighbor)
+
+        cells = new_cells
+
+    return best_pos, best_val
+def sphere(x):
+    return np.sum(x**2)
+best_pos, best_val = simple_ao(
+    func=sphere,
+    bounds=[(-10, 10), (-10, 10)],
+    size=10,
+    iters=50
+)
+
+print("Best Position:", best_pos)
+print("Best Value:", best_val)
